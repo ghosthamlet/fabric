@@ -54,8 +54,7 @@ all_docs(DbName, #view_query_args{keys=nil} = QueryArgs) ->
         inclusive_end = Inclusive,
         extra = Extra
     } = QueryArgs,
-    Options0 = [O || {K, _} = O <- Extra, K =:= snapshot],
-    {ok, Db} = get_or_create_db(DbName, Options0),
+    {ok, Db} = get_or_create_db(DbName, db_options(Extra)),
     set_io_priority(DbName, Extra),
     {ok, Total} = couch_db:get_doc_count(Db),
     Acc0 = #view_acc{
@@ -79,7 +78,7 @@ changes(DbName, #changes_args{} = Args, StartSeq) ->
 changes(DbName, Options, StartVector) ->
     erlang:put(io_priority, {interactive, DbName}),
     #changes_args{dir=Dir} = Args = lists:keyfind(changes_args, 1, Options),
-    case get_or_create_db(DbName, []) of
+    case get_or_create_db(DbName, db_options(Options)) of
     {ok, Db} ->
         StartSeq = calculate_start_seq(Db, StartVector),
         Enum = fun changes_enumerator/2,
@@ -95,6 +94,9 @@ changes(DbName, Options, StartVector) ->
     Error ->
         rexi:reply(Error)
     end.
+
+db_options(Options) ->
+    [O || {K, _} = O <- Options, K =:= snapshot].
 
 map_view(DbName, DDoc, ViewName, QueryArgs) ->
     {ok, Db} = get_or_create_db(DbName, []),
