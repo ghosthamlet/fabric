@@ -21,6 +21,7 @@
 -export([create_db/1, delete_db/1, reset_validation_funs/1, set_security/3,
     set_revs_limit/3, create_shard_db_doc/2, delete_shard_db_doc/2]).
 -export([get_all_security/2]).
+-export([create_snapshot/4, delete_snapshot/3]).
 
 -include("fabric.hrl").
 -include_lib("couch/include/couch_db.hrl").
@@ -41,7 +42,6 @@
 %%  call to with_db will supply your M:F with a #db{} and then remaining args
 
 all_docs(DbName, #view_query_args{keys=nil} = QueryArgs) ->
-    {ok, Db} = get_or_create_db(DbName, []),
     #view_query_args{
         start_key = StartKey,
         start_docid = StartDocId,
@@ -54,6 +54,8 @@ all_docs(DbName, #view_query_args{keys=nil} = QueryArgs) ->
         inclusive_end = Inclusive,
         extra = Extra
     } = QueryArgs,
+    Options0 = [O || {K, _} = O <- Extra, K =:= snapshot],
+    {ok, Db} = get_or_create_db(DbName, Options0),
     set_io_priority(DbName, Extra),
     {ok, Total} = couch_db:get_doc_count(Db),
     Acc0 = #view_acc{
@@ -277,6 +279,12 @@ reset_validation_funs(DbName) ->
     _ ->
         ok
     end.
+
+create_snapshot(DbName, SName, Body, Options) ->
+    with_db(DbName, Options, {couch_db, create_snapshot, [SName, Body]}).
+
+delete_snapshot(DbName, SName, Options) ->
+    with_db(DbName, Options, {couch_db, delete_snapshot, [SName]}).
 
 %%
 %% internal
