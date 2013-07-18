@@ -21,7 +21,7 @@
 
 % DBs
 -export([all_dbs/0, all_dbs/1, create_db/1, create_db/2, delete_db/1,
-    delete_db/2, get_db_info/1, get_doc_count/1, set_revs_limit/3,
+    delete_db/2, get_db_info/1, get_db_info/2, get_doc_count/1, set_revs_limit/3,
     set_security/2, set_security/3, get_revs_limit/1, get_security/1,
     get_security/2, get_all_security/1, get_all_security/2]).
 
@@ -83,7 +83,10 @@ all_dbs(Prefix) when is_list(Prefix) ->
         {disk_format_version, pos_integer()}
     ]}.
 get_db_info(DbName) ->
-    fabric_db_info:go(dbname(DbName)).
+    get_db_info(DbName, []).
+
+get_db_info(DbName, Options) ->
+    fabric_db_info:go(dbname(DbName), Options).
 
 %% @doc the number of docs in a database
 -spec get_doc_count(dbname()) -> {ok, non_neg_integer()}.
