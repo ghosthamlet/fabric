@@ -31,7 +31,8 @@
     update_doc/3, update_docs/3, purge_docs/2, att_receiver/2]).
 
 % Views
--export([all_docs/4, changes/4, query_view/3, query_view/4, query_view/6,
+-export([all_docs/4, changes/4, changes/5,
+    query_view/3, query_view/4, query_view/6,
     get_view_group_info/2]).
 
 % miscellany
@@ -282,13 +283,17 @@ all_docs(DbName, Callback, Acc0, QueryArgs) ->
 -spec changes(dbname(), callback(), any(), #changes_args{} | [{atom(),any()}]) ->
     {ok, any()}.
 changes(DbName, Callback, Acc0, #changes_args{}=Options) ->
-    Feed = Options#changes_args.feed,
-    fabric_view_changes:go(dbname(DbName), Feed, Options, Callback, Acc0);
+    changes(DbName, Callback, Acc0, Options, []);
 
 %% @doc convenience function, takes keylist instead of record
 %% @equiv changes(DbName, Callback, Acc0, kl_to_changes_args(Options))
 changes(DbName, Callback, Acc0, Options) ->
-    changes(DbName, Callback, Acc0, kl_to_changes_args(Options)).
+    changes(DbName, Callback, Acc0, kl_to_changes_args(Options), []).
+
+changes(DbName, Callback, Acc0, #changes_args{}=Args, Extra) ->
+    Feed = Args#changes_args.feed,
+    Options = [{extra, Extra}, Args],
+    fabric_view_changes:go(dbname(DbName), Feed, Options, Callback, Acc0).
 
 %% @equiv query_view(DbName, DesignName, ViewName, #view_query_args{})
 query_view(DbName, DesignName, ViewName) ->

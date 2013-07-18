@@ -78,7 +78,11 @@ changes(DbName, #changes_args{} = Args, StartSeq) ->
 changes(DbName, Options, StartVector) ->
     erlang:put(io_priority, {interactive, DbName}),
     #changes_args{dir=Dir} = Args = lists:keyfind(changes_args, 1, Options),
-    case get_or_create_db(DbName, db_options(Options)) of
+    Extra = case lists:keyfind(extra, 1, Options) of
+        false -> [];
+        {extra, E} -> E
+    end,
+    case get_or_create_db(DbName, db_options(Extra)) of
     {ok, Db} ->
         StartSeq = calculate_start_seq(Db, StartVector),
         Enum = fun changes_enumerator/2,
